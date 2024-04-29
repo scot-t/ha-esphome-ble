@@ -1,0 +1,70 @@
+services:
+  homeassistant:
+    build: 
+      context: ../docker-images/homeassistant
+      args:
+        - DOCKER_DEPLOY_ENV
+    image: homeops_homeassistant
+    container_name: homeassistant
+    hostname: homeassistant
+    restart: unless-stopped
+    # privileged: true  # docs example includes this, but why?
+    ports:
+      - 8123:8123
+    environment: 
+      - TZ=Australia/Melbourne
+    volumes:
+      # - /etc/localtime:/etc/localtime:ro # is this needed
+      # - /run/dbus:/run/dbus:ro  # used by bluetooth integration, doubt wsl exposes host bluetooth
+      - homeassistant-config:/config  # Named volume for app config
+
+      # TODO: backup/restore setup
+      # TODO: add container healthcheck
+      # TODO: decide on config management approach
+
+  esphome:
+    image: ghcr.io/esphome/esphome:2024.3.1@sha256:8e2c9f78dd689971eafa7178466cdd517937eef0da2bcdd9a3269175040c8d98
+      # repository: https://github.com/esphome/esphome/pkgs/container/esphome
+      # dockerfile: https://github.com/esphome/esphome/blob/dev/docker/Dockerfile
+    container_name: esphome
+    hostname: esphome
+    restart: unless-stopped
+    # ports:
+      # - 6052 # dashboard - https://github.com/esphome/esphome/blob/dev/docker/Dockerfile#L119
+      # - 6053 # esphome api - https://esphome.io/components/api.html#configuration-variables
+    # environment:
+    volumes:
+      - esphome-config:/config
+      - /etc/localtime:/etc/localtime:ro
+
+      # TODO: backup/restore setup
+      # TODO: add container healthcheck
+      # TODO: decide on config management approach
+      # TODO: clean up /config directory volume structure (already 3gb after a build)
+
+  influxdb:
+    image: docker.io/library/influxdb:2.7.5-alpine@sha256:fffdcab19393a354155d33f2eec1fca1e35c70989f6a804ecc9fa66e4919cfe6
+    # repository: https://hub.docker.com/_/influxdb
+    # dockerfile: https://github.com/influxdata/influxdb/blob/main-2.x/docker/influxd/Dockerfile
+    container_name: influxdb
+    hostname: influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ORG=org
+      - DOCKER_INFLUXDB_INIT_BUCKET=bucket
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+
+      # TODO: backup/restore setup
+      # TODO: add container healthcheck
+      # TODO: decide on config management approach
+
+volumes:
+  homeassistant-config:
+  esphome-config:
+  influxdb-config:
+  influxdb-data:

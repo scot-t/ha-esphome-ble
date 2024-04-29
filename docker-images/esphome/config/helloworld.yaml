@@ -1,0 +1,139 @@
+esphome:
+  name: node-world
+  platformio_options: 
+    # https://www.reddit.com/r/Esphome/comments/16evafm/does_the_wemos_lolin_c3_pico_work_with_esphome/k6y131q/
+    board_build.flash_mode: dio 
+
+esp32:
+  board: lolin_c3_mini
+  framework:
+    type: esp-idf
+    version: recommended
+
+logger:
+  level: debug # defaults to debug
+
+ota:
+  password: ""
+
+debug:
+  # https://esphome.io/components/debug
+  update_interval: 15s
+
+psram:
+  # https://esphome.io/components/psram
+  # used by debug sensor
+
+api:
+  # Enable Home Assistant API
+  password: ""
+  # TODO: may need to add workaround for esp32-c3 single core
+  # - <https://esphome.io/components/esp32_ble_tracker#use-on-single-core-chips>
+  on_client_connected:
+    - esp32_ble_tracker.start_scan:
+       continuous: true
+  on_client_disconnected:
+    - esp32_ble_tracker.stop_scan:
+
+
+# Enable networking
+wifi:
+  networks:
+    - ssid: "network_ssid"
+      password: "plaintext_password" # todo: figure out making make this a secret
+  # use_address: "192.168.13.230" # connect on static lease ip
+  fast_connect: true # don't scan for networks, just try connect
+
+
+# Bluetooth configuration
+
+  # ble_tracker seems to be the base component needed by all others
+  # https://esphome.io/components/esp32_ble_tracker
+esp32_ble_tracker:
+  scan_parameters: 
+    continuous: false
+    active: true
+    interval: 320ms
+    window: 320ms
+
+  # bluetooth_proxy
+  # https://esphome.io/components/bluetooth_proxy
+bluetooth_proxy:
+  active: false
+
+# Expose devices
+
+button:
+    # Device control
+  - platform: restart
+    name: "ESPHome node-world Restart"
+
+sensor:
+
+  # Esphome debug sensors
+  - platform: debug
+    free:
+      name: "Heap Free"
+    # fragmentation:
+    #   name: "Heap Fragmentation"
+    block:
+      name: "Heap Max Block"
+    loop_time:
+      name: "Loop Time"
+    psram:
+      name: "Free PSRAM"
+
+  # ble_rssi sensor tracks rssi value of configured mac addresses
+  # https://esphome.io/components/sensor/ble_rssi
+  # RSSI based on MAC address
+  # - platform: ble_rssi
+  #   service_uuid: '1abc75fd'
+  #   name: "ESP32 BLE Tracker Pixel 7 Pro RSSI"
+  - platform: ble_rssi
+    ibeacon_uuid: '1e3d28b6-47ce-4ea9-ae70-b2e893bfa11f'
+    name: "ESP32 BLE Tracker Pixel 7 Pro RSSI"
+
+binary_sensor:
+
+  # ESP32 device control
+  - platform: status
+    name: "ESPHome node-world Status"
+
+  # ble_presence sensor tracks binary presence of a ble resource
+  # https://esphome.io/components/binary_sensor/ble_presence
+  # - platform: ble_presence
+  #   service_uuid: '1abc75fd'
+  #   name: "ESP32 BLE Tracker Pixel 7 Pro Presence"
+  #   min_rssi: -85dB
+  #   timeout: 15s
+  - platform: ble_presence
+    ibeacon_uuid: '1e3d28b6-47ce-4ea9-ae70-b2e893bfa11f'
+    name: "ESP32 BLE Tracker Pixel 7 Pro Presence"
+    min_rssi: -100dB
+    timeout: 15s
+
+  # Presence based on MAC address
+  # - platform: ble_presence
+  #   mac_address: D4:3A:2C:AB:84:75
+  #   name: "ESP32 BLE Tracker Pixel 7 Pro"
+  #   min_rssi: -80dB
+
+  # Presence based on Identity Resolving Key (IRK)
+  # - platform: ble_presence
+  #   irk: 1234567890abcdef1234567890abcdef
+  #   name: "ESP32 BLE Tracker iPhone"
+
+
+text_sensor:
+
+  # ble_scanner sensor publishes all seen devices as text
+  # https://esphome.io/components/text_sensor/ble_scanner
+  # very verbose, basically logs as sensor output, not very parseable via HA UI.  
+  # also seems to kill the connection after a short while
+  # - platform: ble_scanner
+  #   name: "BLE Devices Scanner"
+  - platform: debug
+    device:
+      name: "Device Info"
+    reset_reason:
+      name: "Reset Reason"

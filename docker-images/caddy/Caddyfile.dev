@@ -1,0 +1,196 @@
+#------------------------------------------------------------------------------
+# Global config
+
+{
+    log {
+        level   DEBUG
+    }
+}
+
+#------------------------------------------------------------------------------
+# Snippets
+
+    (tls_config) {
+        tls {
+            issuer acme {
+                dns cloudflare {env.CLOUDFLARE_API_KEY}
+                resolvers 1.1.1.1
+            }
+        }
+    }
+
+    (base_redirect) {
+        @base {
+            host np.c.lorenvale.com localhost
+        }
+        route @base {
+            redir https://homer.{host} 302
+        }
+    }
+
+    (logging) {
+        log
+    }
+
+    (sites) {
+
+        @alertmanager {
+            header Host alertmanager.*
+        }
+        handle @alertmanager {
+            reverse_proxy alertmanager:9093
+        }
+
+        @blackbox {
+            header Host blackbox.*
+        }
+        handle @blackbox {
+            reverse_proxy blackbox:9115
+        }
+
+        @code-server {
+            header Host code-server.*
+        }
+        handle @code-server {
+            reverse_proxy code-server:8080
+        }
+
+        @cadvisor {
+            header Host cadvisor.*
+        }
+        handle @cadvisor {
+            reverse_proxy cadvisor:8080
+        }
+
+        @deluge {
+            header Host deluge.*
+        }
+        handle @deluge {
+            reverse_proxy deluge:8112
+        }
+
+        @dozzle {
+            header Host dozzle.*
+        }
+        handle @dozzle {
+            reverse_proxy dozzle:8080
+        }
+
+        @esphome {
+            header Host esphome.*
+        }
+        handle @esphome {
+            reverse_proxy esphome:6052
+        }
+
+        @gitea {
+            header Host gitea.*
+        }
+        handle @gitea {
+            reverse_proxy gitea:3000
+        }
+        
+        @grafana {
+            header Host grafana.*
+        }
+        handle @grafana {
+            reverse_proxy grafana:3000
+        }
+
+        @homeassistant {
+            header Host homeassistant.*
+        }
+        handle @homeassistant {
+            reverse_proxy homeassistant:8123
+        }
+
+        @homer {
+            header Host homer.*
+        }
+        handle @homer {
+            reverse_proxy homer:8080
+        }
+
+        @influxdb {
+            header Host influxdb.*
+        }
+        handle @influxdb {
+            reverse_proxy influxdb:8086
+        }
+
+        @netdata {
+            header Host netdata.*
+        }
+        handle @netdata {
+            reverse_proxy host.docker.internal:19999
+        }
+
+        @nextcloud {
+            header Host nextcloud.*
+        }
+        handle @nextcloud {
+            reverse_proxy nextcloud:80
+        }
+
+        @node-exporter {
+            header Host node-exporter.*
+        }
+        handle @node-exporter {
+            reverse_proxy node-exporter:9100
+        }
+
+        @plex {
+            header Host plex.*
+        }
+        handle @plex {
+            reverse_proxy plex:32400
+        }
+
+        @prometheus {
+            header Host prometheus.*
+        }
+        handle @prometheus {
+            reverse_proxy prometheus:9090
+        }
+
+        @sonarr {
+            header Host sonarr.*
+        }
+        handle @sonarr {
+            reverse_proxy sonarr:8989
+        }
+
+        @unifi {
+            header Host unifi.*
+        }
+        handle @unifi {
+            reverse_proxy unifi:8080
+        }
+
+        # Return 404 if subdomain not explicitly matched above
+        error "Not found" 404
+    }
+
+#------------------------------------------------------------------------------
+# Sites
+
+np.c.lorenvale.com, *.np.c.lorenvale.com {
+
+    import tls_config
+    import base_redirect
+    import logging
+    import sites
+
+}
+
+localhost, *.localhost {
+
+    tls {
+        issuer internal
+    }
+
+    import base_redirect
+    import logging
+    import sites
+
+}

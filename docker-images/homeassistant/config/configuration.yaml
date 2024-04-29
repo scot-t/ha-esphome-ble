@@ -1,0 +1,71 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+
+recorder:
+  purge_keep_days: 60
+
+http:
+  # https://community.home-assistant.io/t/reverse-proxy-using-nginx/196954
+  use_x_forwarded_for: true
+  trusted_proxies: 172.0.0.0/8
+  # trusted_proxies: 172.18.0.5
+  # todo: set a static IP for caddy, or see how quickly this breaks inside docker
+
+influxdb:
+  api_version: 2
+  ssl: false
+  host: influxdb
+  port: 8086
+  token: "deleted" 
+  organization: b3faaf5b02c7bb30 
+  tags:
+    source: homeassistant
+  tags_attributes: 
+    - friendly_name
+  bucket: bucket
+  max_retries: 3
+
+prometheus:
+  filter:
+    include_entity_globs:
+      - sensor.atc_*
+      - sensor.plant_sensor*
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# !include_dir_merge_named services
+
+light:
+  - platform: template
+    lights: 
+      stairway_light:
+        friendly_name: "Stairway Light"	
+        unique_id: "f3a42217"
+        turn_on:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn on the stairway light" }
+        turn_off:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn off the stairway light" }
+        set_level:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn on the stairway light to {{ ( brightness / 255 * 100 ) | round(0) }} percent brightness" }
+      office_light:
+        friendly_name: "Office Light"
+        unique_id: "8a0503d3"
+        turn_on:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn on the office light" }
+        turn_off:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn off the office light" }
+        set_level:
+          service: google_assistant_sdk.send_text_command
+          data: { "command": "turn on the office light to {{ ( brightness / 255 * 100 ) | round(0) }} percent brightness" }
+

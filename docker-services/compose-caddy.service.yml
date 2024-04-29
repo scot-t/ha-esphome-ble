@@ -1,0 +1,24 @@
+services:
+  caddy:
+    build:  
+      context: ../docker-images/caddy
+      args:
+        - DOCKER_DEPLOY_ENV
+    image:  homeops_caddy
+    container_name: caddy
+    hostname: caddy
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      - "com.local.homeops.collection=tooling"
+    environment:
+      - CLOUDFLARE_API_KEY
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - caddy-data:/data
+
+volumes:
+  caddy-data:

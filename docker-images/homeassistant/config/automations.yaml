@@ -1,0 +1,295 @@
+- id: '1711370220994'
+  alias: 'schedule(managed):lights(bedroom): scott morning alarm'
+  description: 6am lights-on alarm
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.weekday_light_alarm
+  condition:
+  - condition: zone
+    entity_id: person.scott
+    zone: zone.home
+  action:
+  - choose:
+    - conditions:
+      - condition: and
+        conditions:
+        - condition: state
+          entity_id: schedule.weekday_light_alarm
+          state: 'on'
+        - condition: state
+          entity_id: input_boolean.bedside_light_alarm
+          state: 'on'
+      sequence:
+      - service: light.turn_on
+        metadata: {}
+        data:
+          brightness_pct: 100
+          transition: 60
+        target:
+          device_id: 288f23a1ea6cf2bf2f2231bcbcdd9c12
+    - conditions:
+      - condition: state
+        entity_id: schedule.weekday_light_alarm
+        state: 'off'
+      sequence:
+      - service: light.turn_off
+        metadata: {}
+        data:
+          transition: 5
+        target:
+          device_id: 288f23a1ea6cf2bf2f2231bcbcdd9c12
+  mode: single
+- id: '1711371227455'
+  alias: 'action:lights(house): turn off all the lights'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.turn_off_all_the_lights
+  condition: []
+  action:
+  - service: light.turn_off
+    metadata: {}
+    data:
+      transition: 5
+    target:
+      area_id:
+      - bedroom
+      - kitchen
+  - service: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id:
+      - study
+      - library
+      - living_room
+      - stairway
+  mode: single
+- id: '1711464597429'
+  alias: 'schedule(0900):lights(bedroom): morning off for day'
+  description: ''
+  trigger:
+  - platform: time
+    at: 09:00:00
+  condition: []
+  action:
+  - service: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - e893a10279e326ec6897013627271d17
+      - 288f23a1ea6cf2bf2f2231bcbcdd9c12
+  mode: single
+- id: '1711544469601'
+  alias: 'schedule(2000):lights(bedroom): evening turn on to ambient'
+  description: ''
+  trigger:
+  - platform: time
+    at: '20:00:00'
+    enabled: false
+  - platform: sun
+    event: sunset
+    offset: 0
+  condition:
+  - condition: time
+    after: '20:00:00'
+    before: '22:00:00'
+  action:
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+      transition: 10
+    target:
+      device_id:
+      - 288f23a1ea6cf2bf2f2231bcbcdd9c12
+      - e893a10279e326ec6897013627271d17
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 6
+      transition: 10
+    target:
+      device_id:
+      - e893a10279e326ec6897013627271d17
+      - 288f23a1ea6cf2bf2f2231bcbcdd9c12
+    enabled: true
+  mode: single
+- id: '1712234505211'
+  alias: 'schedule(0700):lights(kitchen): morning lights on'
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 0
+  condition: []
+  action:
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+      color_temp: 200
+    target:
+      device_id:
+      - 55a16bf678f68a69b43ed1486a34ad59
+      - e339c234962d9481c79e54ebea7ceb11
+  mode: single
+- id: '1712235653286'
+  alias: 'schedule(2000):lights(common): evening dim common lights'
+  description: ''
+  trigger:
+  - platform: time
+    at: '20:00:00'
+  condition: []
+  action:
+  - service: light.turn_on
+    target:
+      device_id:
+      - 55a16bf678f68a69b43ed1486a34ad59
+      - e339c234962d9481c79e54ebea7ceb11
+    data:
+      brightness_pct: 80
+      color_temp: 333
+      transition: 10
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 1
+    target:
+      device_id: 453d9a68ba33e0338f7a74b9216bbf36
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 1
+    target:
+      entity_id: light.stairway_light
+  mode: single
+- id: '1712236435995'
+  alias: 'schedule(1800):lights(common): evening turn on to bright'
+  description: ''
+  trigger:
+  - platform: time
+    at: '18:00:00'
+  condition: []
+  action:
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+    target:
+      device_id: f616f58f2b757a21617c9843aa067570
+  - service: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.stairway_light
+    enabled: true
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 100
+    target:
+      entity_id: light.stairway_light
+  mode: single
+- id: '1712238349821'
+  alias: Test scheduler
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:15:00
+    id: time_0615
+  - platform: time
+    at: 06:30:00
+    id: time_0630
+  condition:
+  - condition: zone
+    entity_id: person.scott
+    zone: zone.home
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - time_0615
+      sequence:
+      - service: automation.trigger
+        metadata: {}
+        data:
+          skip_condition: false
+        target:
+          entity_id: automation.action_lights_study_turn_on_study_lights
+  mode: single
+- id: '1712238523950'
+  alias: 'action:lights(study): study lights on to ambient'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.turn_on_study_lights_to_ambient
+  condition: []
+  action:
+  - service: light.turn_on
+    metadata: {}
+    data:
+      color_temp: 344
+      brightness_pct: 2
+    target:
+      device_id: 715da9a95afce2c3753f399c5a8fa55b
+  - service: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      device_id: 4b9773d261f22f46b7258fd4f683f39c
+  - service: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.office_light
+  - service: light.turn_on
+    metadata: {}
+    data:
+      brightness_pct: 5
+    target:
+      entity_id: light.office_light
+  mode: single
+- id: '1712354713063'
+  alias: 'Notify zone location '
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.scott
+    zone: zone.home
+    event: enter
+    id: zome_home_scott_arrive
+  - platform: zone
+    entity_id: person.scott
+    zone: zone.home
+    event: leave
+    id: zome_home_scott_leave
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - zome_home_scott_arrive
+      sequence:
+      - service: notify.mobile_app_pixel_7_pro
+        metadata: {}
+        data:
+          message: Detected Scott arrived Home
+          title: Location Event
+    - conditions:
+      - condition: trigger
+        id:
+        - zome_home_scott_leave
+      sequence:
+      - service: notify.mobile_app_pixel_7_pro
+        metadata: {}
+        data:
+          message: Detected Scott left Home
+          title: Location Event
+  mode: single
